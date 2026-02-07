@@ -1,0 +1,39 @@
+version: '3'
+
+tasks:
+  test:
+    desc: "テストを実行する（例: task test -- -run TestNewEmail/異常系）"
+    cmds:
+      - gotestsum --format testname -- -v ./... {{.CLI_ARGS}}
+
+  test:short:
+    desc: テストを実行する（簡易出力）
+    cmds:
+      - gotestsum -- ./...
+
+  fmt:
+    desc: コードをフォーマットする
+    cmds:
+      - gofmt -w .
+
+  vet:
+    desc: 静的解析を実行する
+    cmds:
+      - go vet ./...
+
+  build:
+    desc: ビルドする
+    cmds:
+      - go build -o go-api .
+
+  run:
+    desc: サーバーを起動する
+    cmds:
+      - go run main.go
+
+  check:
+    desc: fmt + vet + test をまとめて実行する
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: test

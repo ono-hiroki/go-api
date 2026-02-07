@@ -1,0 +1,8 @@
+# Binary
+go-api
+
+# IDE
+.idea/
+
+# git-crypt key
+.git-crypt-key

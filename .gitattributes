@@ -1,0 +1,2 @@
+.memo/** filter=git-crypt diff=git-crypt
+.claude/** filter=git-crypt diff=git-crypt
