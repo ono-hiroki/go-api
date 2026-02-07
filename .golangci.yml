@@ -1,0 +1,41 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - unused
+    - gocritic
+    - gocyclo
+    - dupl
+    - exhaustive
+    - gosec
+    - prealloc
+    - unconvert
+    - unparam
+
+  settings:
+    gocyclo:
+      min-complexity: 15
+    dupl:
+      threshold: 100
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        - ifElseChain
+    exhaustive:
+      default-signifies-exhaustive: true
+
+issues:
+  exclude-dirs:
+    - internal/sqlc
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec

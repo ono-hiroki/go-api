@@ -43,7 +43,7 @@ func (r *UserRepository) FindByID(ctx context.Context, id valueobject.UserID) (*
 		}
 		return nil, err
 	}
-	return toEntity(row)
+	return toEntity(&row)
 }
 
 // FindAll は全ユーザーを取得する。
@@ -54,8 +54,8 @@ func (r *UserRepository) FindAll(ctx context.Context) ([]*user.User, error) {
 	}
 
 	users := make([]*user.User, 0, len(rows))
-	for _, row := range rows {
-		u, err := toEntity(row)
+	for i := range rows {
+		u, err := toEntity(&rows[i])
 		if err != nil {
 			return nil, err
 		}
@@ -72,12 +72,12 @@ func (r *UserRepository) Delete(ctx context.Context, id valueobject.UserID) erro
 // uuidToPgtype はドメインのUserIDをPostgreSQLのUUID型に変換する。
 func uuidToPgtype(id valueobject.UserID) pgtype.UUID {
 	var pgID pgtype.UUID
-	pgID.Scan(id.String())
+	_ = pgID.Scan(id.String())
 	return pgID
 }
 
 // toEntity はsqlcの行データをドメインのUserエンティティに変換する。
-func toEntity(row sqlcuser.User) (*user.User, error) {
+func toEntity(row *sqlcuser.User) (*user.User, error) {
 	id, err := valueobject.ParseUserID(uuidToString(row.ID))
 	if err != nil {
 		return nil, err

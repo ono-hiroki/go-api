@@ -4,14 +4,24 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
-	http.HandleFunc("/", handleHello)
-	http.HandleFunc("/health", handleHealth)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleHello)
+	mux.HandleFunc("/health", handleHealth)
+
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
 
 	log.Println("Server starting on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(server.ListenAndServe())
 }
 
 func handleHello(w http.ResponseWriter, r *http.Request) {
@@ -20,10 +30,10 @@ func handleHello(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Hello, World!"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Hello, World!"})
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
