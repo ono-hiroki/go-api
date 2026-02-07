@@ -37,3 +37,24 @@ tasks:
       - task: fmt
       - task: vet
       - task: test
+
+  db:up:
+    desc: マイグレーションを実行する
+    cmds:
+      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" up
+
+  db:down:
+    desc: マイグレーションをロールバックする
+    cmds:
+      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" down 1
+
+  db:reset:
+    desc: DBをリセットする（全てdown→up）
+    cmds:
+      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" drop -f
+      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" up
+
+  db:create:
+    desc: "新しいマイグレーションを作成する（例: task db:create -- create_posts）"
+    cmds:
+      - migrate create -ext sql -dir db/migrations -seq {{.CLI_ARGS}}
