@@ -35,3 +35,7 @@ func NewEmail(v string) (Email, error) {
 func (e Email) String() string {
 	return e.value
 }
+
+func (e Email) Equal(other Email) bool {
+	return e.value == other.value
+}

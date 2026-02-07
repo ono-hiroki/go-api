@@ -26,3 +26,7 @@ func NewUserName(v string) (UserName, error) {
 func (n UserName) String() string {
 	return n.value
 }
+
+func (n UserName) Equal(other UserName) bool {
+	return n.value == other.value
+}

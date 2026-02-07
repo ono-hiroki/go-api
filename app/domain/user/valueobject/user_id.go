@@ -2,6 +2,7 @@ package valueobject
 
 import (
 	"errors"
+
 	"github.com/google/uuid"
 )
 
@@ -27,4 +28,8 @@ func ParseUserID(v string) (UserID, error) {
 
 func (id UserID) String() string {
 	return id.value
+}
+
+func (id UserID) Equal(other UserID) bool {
+	return id.value == other.value
 }
