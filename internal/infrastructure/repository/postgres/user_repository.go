@@ -7,11 +7,18 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"go-api/internal/domain"
 	"go-api/internal/domain/user"
 	"go-api/internal/domain/user/valueobject"
 	sqlcuser "go-api/internal/sqlc/user"
+)
+
+const (
+	// PostgreSQL エラーコード
+	pgUniqueViolation = "23505"
 )
 
 // UserRepository はPostgreSQLを使用したユーザーリポジトリの実装。
@@ -25,21 +32,30 @@ func NewUserRepository(queries *sqlcuser.Queries) *UserRepository {
 }
 
 // Save はユーザーをDBに保存する。
+// 一意制約違反の場合は domain.ErrConflict を返す。
 func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
-	return r.queries.CreateUser(ctx, sqlcuser.CreateUserParams{
+	err := r.queries.CreateUser(ctx, sqlcuser.CreateUserParams{
 		ID:    uuidToPgtype(u.ID()),
 		Name:  u.Name().String(),
 		Email: u.Email().String(),
 	})
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation {
+			return domain.Conflict("user", "Save", err)
+		}
+		return err
+	}
+	return nil
 }
 
 // FindByID は指定されたIDのユーザーを取得する。
-// 見つからない場合は nil, nil を返す。
+// 見つからない場合は domain.ErrNotFound を返す。
 func (r *UserRepository) FindByID(ctx context.Context, id valueobject.UserID) (*user.User, error) {
 	row, err := r.queries.GetUser(ctx, uuidToPgtype(id))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, domain.NotFound("user", "FindByID")
 		}
 		return nil, err
 	}

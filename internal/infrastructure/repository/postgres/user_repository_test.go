@@ -4,6 +4,7 @@ package postgres_test
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"go-api/internal/domain"
 	"go-api/internal/domain/user"
 	"go-api/internal/domain/user/valueobject"
 	"go-api/internal/infrastructure/repository/postgres"
@@ -122,13 +124,13 @@ func TestUserRepository_FindByID(t *testing.T) {
 		assert.Equal(t, u.Email().String(), found.Email().String(), "Email が一致しない")
 	})
 
-	t.Run("存在しないIDでnilを返す", func(t *testing.T) {
+	t.Run("存在しないIDでErrNotFoundを返す", func(t *testing.T) {
 		ctx, _, repo := setupTest(t)
 
 		nonExistentID := valueobject.NewUserID()
 
 		found, err := repo.FindByID(ctx, nonExistentID)
-		require.NoError(t, err, "FindByID に失敗")
+		assert.True(t, errors.Is(err, domain.ErrNotFound), "ErrNotFound が返るべき")
 		assert.Nil(t, found, "存在しないIDで nil が返るべき")
 	})
 }
