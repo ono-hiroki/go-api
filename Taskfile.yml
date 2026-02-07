@@ -1,5 +1,8 @@
 version: '3'
 
+vars:
+  DATABASE_URL: "postgres://app:password@localhost:5432/go_api?sslmode=disable"
+
 tasks:
   test:unit:
     desc: "ユニットテストを実行する（例: task test:unit -- -run TestNewEmail/異常系）"
@@ -30,11 +33,6 @@ tasks:
     cmds:
       - gofmt -w .
 
-  vet:
-    desc: 静的解析を実行する
-    cmds:
-      - go vet ./...
-
   lint:
     desc: golangci-lintで静的解析を実行する
     cmds:
@@ -48,7 +46,7 @@ tasks:
   build:
     desc: ビルドする
     cmds:
-      - go build -o go-api .
+      - go build -o go-api ./cmd/server
 
   run:
     desc: サーバーを起動する
@@ -56,27 +54,27 @@ tasks:
       - go run ./cmd/server
 
   check:
-    desc: fmt + vet + test:unit をまとめて実行する
+    desc: fmt + lint + test:unit をまとめて実行する
     cmds:
       - task: fmt
-      - task: vet
+      - task: lint
       - task: test:unit
 
   db:up:
     desc: マイグレーションを実行する
     cmds:
-      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" up
+      - migrate -path db/migrations -database "{{.DATABASE_URL}}" up
 
   db:down:
     desc: マイグレーションをロールバックする
     cmds:
-      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" down 1
+      - migrate -path db/migrations -database "{{.DATABASE_URL}}" down 1
 
   db:reset:
     desc: DBをリセットする（全てdown→up）
     cmds:
-      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" drop -f
-      - migrate -path db/migrations -database "postgres://app:password@localhost:5432/go_api?sslmode=disable" up
+      - migrate -path db/migrations -database "{{.DATABASE_URL}}" drop -f
+      - migrate -path db/migrations -database "{{.DATABASE_URL}}" up
 
   db:create:
     desc: "新しいマイグレーションを作成する（例: task db:create -- create_posts）"
