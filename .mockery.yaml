@@ -1,0 +1,9 @@
+with-expecter: true
+dir: "{{ .InterfaceDir }}/mocks"
+mockname: "Mock{{ .InterfaceName }}"
+outpkg: "mocks"
+filename: "mock_{{ .InterfaceName | snakecase }}.go"
+packages:
+  go-api/internal/domain/user:
+    interfaces:
+      UserRepository:

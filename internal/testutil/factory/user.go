@@ -32,7 +32,13 @@ func NewUser(opts ...UserOption) *user.User {
 		opt(p)
 	}
 
-	name, _ := valueobject.NewUserName(p.name)
-	email, _ := valueobject.NewEmail(p.email)
+	name, err := valueobject.NewUserName(p.name)
+	if err != nil {
+		panic(fmt.Sprintf("factory.NewUser: invalid name %q: %v", p.name, err))
+	}
+	email, err := valueobject.NewEmail(p.email)
+	if err != nil {
+		panic(fmt.Sprintf("factory.NewUser: invalid email %q: %v", p.email, err))
+	}
 	return user.NewUser(name, email)
 }

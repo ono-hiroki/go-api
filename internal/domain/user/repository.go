@@ -6,6 +6,8 @@ import (
 	"go-api/internal/domain/user/valueobject"
 )
 
+//go:generate mockery
+
 // UserRepository はユーザーの永続化インターフェース。
 type UserRepository interface {
 	Save(ctx context.Context, user *User) error
