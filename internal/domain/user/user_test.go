@@ -3,7 +3,7 @@ package user
 import (
 	"testing"
 
-	"go-api/app/domain/user/valueobject"
+	"go-api/internal/domain/user/valueobject"
 )
 
 func TestNewUser(t *testing.T) {

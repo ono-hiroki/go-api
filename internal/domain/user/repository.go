@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"go-api/app/domain/user/valueobject"
+	"go-api/internal/domain/user/valueobject"
 )
 
 // UserRepository はユーザーの永続化インターフェース。

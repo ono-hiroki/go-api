@@ -1,7 +1,7 @@
 package user
 
 import (
-	"go-api/app/domain/user/valueobject"
+	"go-api/internal/domain/user/valueobject"
 )
 
 // User はユーザーエンティティ。

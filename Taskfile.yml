@@ -1,15 +1,29 @@
 version: '3'
 
 tasks:
-  test:
-    desc: "テストを実行する（例: task test -- -run TestNewEmail/異常系）"
+  test:unit:
+    desc: "ユニットテストを実行する（例: task test:unit -- -run TestNewEmail/異常系）"
     cmds:
       - gotestsum --format testname -- -v ./... {{.CLI_ARGS}}
 
-  test:short:
-    desc: テストを実行する（簡易出力）
+  test:unit:short:
+    desc: ユニットテストを実行する（簡易出力）
     cmds:
       - gotestsum -- ./...
+
+  test:integration:
+    desc: インテグレーションテストを実行する
+    dotenv:
+      - .env.testing
+    cmds:
+      - go test -v -tags=integration ./internal/infrastructure/...
+
+  test:
+    desc: 全テストを実行する（ユニット + インテグレーション）
+    dotenv:
+      - .env.testing
+    cmds:
+      - gotestsum --format testname -- -v -tags=integration ./...
 
   fmt:
     desc: コードをフォーマットする
@@ -29,14 +43,14 @@ tasks:
   run:
     desc: サーバーを起動する
     cmds:
-      - go run main.go
+      - go run ./cmd/server
 
   check:
-    desc: fmt + vet + test をまとめて実行する
+    desc: fmt + vet + test:unit をまとめて実行する
     cmds:
       - task: fmt
       - task: vet
-      - task: test
+      - task: test:unit
 
   db:up:
     desc: マイグレーションを実行する
@@ -58,3 +72,13 @@ tasks:
     desc: "新しいマイグレーションを作成する（例: task db:create -- create_posts）"
     cmds:
       - migrate create -ext sql -dir db/migrations -seq {{.CLI_ARGS}}
+
+  generate:
+    desc: sqlcでコード生成する
+    cmds:
+      - sqlc generate
+
+  docs:
+    desc: ドキュメントサーバーを起動する（http://localhost:6060）
+    cmds:
+      - pkgsite -http=:6060 .
