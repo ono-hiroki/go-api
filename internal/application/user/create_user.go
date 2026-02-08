@@ -10,8 +10,8 @@ import (
 
 // CreateUserInput はユーザー作成の入力。
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"required,max=100"`
+	Email string `json:"email" validate:"required,max=255,email"`
 }
 
 // CreateUserOutput はユーザー作成の出力。

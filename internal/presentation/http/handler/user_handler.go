@@ -3,14 +3,18 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
-	"regexp"
+
+	"github.com/go-playground/validator/v10"
 
 	"go-api/internal/application/user"
 	"go-api/internal/domain"
 	httperrors "go-api/internal/presentation/http/errors"
 )
+
+var validate = validator.New()
 
 // UserHandler はユーザー関連のHTTPハンドラー。
 type UserHandler struct {
@@ -70,32 +74,52 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(output)
 }
 
-var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-
 // validateCreateUserInput は入力値をバリデーションする。
 // エラーがある場合は ValidationError を返し、問題なければ nil を返す。
 func validateCreateUserInput(input user.CreateUserInput) *domain.ValidationError {
+	err := validate.Struct(input)
+	if err == nil {
+		return nil
+	}
+
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) {
+		return nil
+	}
+
 	ve := domain.NewValidationError()
-
-	switch {
-	case input.Name == "":
-		ve.Add("name", "required", "name is required")
-	case len([]rune(input.Name)) > 100:
-		ve.Add("name", "too_long", "name must be 100 characters or less")
+	for _, fe := range validationErrors {
+		ve.Add(fe.Field(), tagToCode(fe.Tag()), tagToMessage(fe))
 	}
 
-	switch {
-	case input.Email == "":
-		ve.Add("email", "required", "email is required")
-	case len(input.Email) > 255:
-		ve.Add("email", "too_long", "email must be 255 characters or less")
-	case !emailRegex.MatchString(input.Email):
-		ve.Add("email", "invalid_format", "email format is invalid")
-	}
+	return ve
+}
 
-	if ve.HasErrors() {
-		return ve
+// tagToCode はバリデーションタグをエラーコードに変換する。
+func tagToCode(tag string) string {
+	switch tag {
+	case "required":
+		return "required"
+	case "max":
+		return "too_long"
+	case "email":
+		return "invalid_format"
+	default:
+		return "invalid"
 	}
+}
 
-	return nil
+// tagToMessage はバリデーションエラーからメッセージを生成する。
+func tagToMessage(fe validator.FieldError) string {
+	field := fe.Field()
+	switch fe.Tag() {
+	case "required":
+		return field + " is required"
+	case "max":
+		return field + " must be " + fe.Param() + " characters or less"
+	case "email":
+		return field + " format is invalid"
+	default:
+		return field + " is invalid"
+	}
 }
