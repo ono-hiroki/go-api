@@ -1,0 +1,192 @@
+openapi: 3.0.0
+info:
+  title: Go API
+  version: 0.0.0
+tags:
+  - name: Users
+  - name: System
+paths:
+  /health:
+    get:
+      operationId: Health_check
+      description: ヘルスチェック
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                required:
+                  - status
+      tags:
+        - System
+  /users:
+    get:
+      operationId: Users_list
+      description: ユーザー一覧を取得する
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUsersResponse'
+        '500':
+          description: 内部サーバーエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - INTERNAL_ERROR
+                  message:
+                    type: string
+                    enum:
+                      - internal server error
+                required:
+                  - code
+                  - message
+      tags:
+        - Users
+    post:
+      operationId: Users_create
+      description: ユーザーを作成する
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          description: バリデーションエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationErrorDetail'
+                required:
+                  - code
+                  - message
+                  - details
+        '500':
+          description: 内部サーバーエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - INTERNAL_ERROR
+                  message:
+                    type: string
+                    enum:
+                      - internal server error
+                required:
+                  - code
+                  - message
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: ユーザー名 (1-100文字)
+        email:
+          type: string
+          maxLength: 255
+          description: メールアドレス
+      description: ユーザー作成リクエスト
+    CreateUserResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+      description: ユーザー作成レスポンス
+    ListUsersResponse:
+      type: object
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+      description: ユーザー一覧レスポンス
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          description: ユーザーID (UUID)
+        name:
+          type: string
+          description: ユーザー名
+        email:
+          type: string
+          description: メールアドレス
+      description: ユーザー情報
+    ValidationErrorDetail:
+      type: object
+      required:
+        - field
+        - code
+        - message
+      properties:
+        field:
+          type: string
+          description: エラーが発生したフィールド名
+        code:
+          type: string
+          description: エラーコード (required, too_long, invalid_format など)
+        message:
+          type: string
+          description: エラーメッセージ
+      description: バリデーションエラーの詳細
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+    variables: {}

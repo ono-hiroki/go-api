@@ -6,3 +6,6 @@ go-api
 
 # git-crypt key
 .git-crypt-key
+
+# Node.js
+node_modules/

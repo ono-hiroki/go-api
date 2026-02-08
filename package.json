@@ -1,0 +1,31 @@
+{
+  "name": "go-api",
+  "version": "1.0.0",
+  "description": "Go言語によるREST APIサーバー。クリーンアーキテクチャで構築。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "openapi": "tsp compile typespec/main.tsp",
+    "openapi:watch": "tsp compile typespec/main.tsp --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ono-hiroki/go-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ono-hiroki/go-api/issues"
+  },
+  "homepage": "https://github.com/ono-hiroki/go-api#readme",
+  "devDependencies": {
+    "@typespec/compiler": "^1.8.0",
+    "@typespec/http": "^1.8.0",
+    "@typespec/openapi": "^1.8.0",
+    "@typespec/openapi3": "^1.8.0",
+    "@typespec/rest": "^0.78.0"
+  }
+}
