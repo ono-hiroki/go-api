@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"regexp"
 
 	"go-api/internal/application/user"
 	"go-api/internal/domain"
-	"go-api/internal/domain/user/valueobject"
 	httperrors "go-api/internal/presentation/http/errors"
 )
 
@@ -70,21 +70,27 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(output)
 }
 
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
 // validateCreateUserInput は入力値をバリデーションする。
 // エラーがある場合は ValidationError を返し、問題なければ nil を返す。
 func validateCreateUserInput(input user.CreateUserInput) *domain.ValidationError {
 	ve := domain.NewValidationError()
 
-	if _, err := valueobject.NewUserName(input.Name); err != nil {
-		if fe := valueobject.ToFieldError("name", err); fe != nil {
-			ve.Add(fe.Field, fe.Code, fe.Message)
-		}
+	switch {
+	case input.Name == "":
+		ve.Add("name", "required", "name is required")
+	case len([]rune(input.Name)) > 100:
+		ve.Add("name", "too_long", "name must be 100 characters or less")
 	}
 
-	if _, err := valueobject.NewEmail(input.Email); err != nil {
-		if fe := valueobject.ToFieldError("email", err); fe != nil {
-			ve.Add(fe.Field, fe.Code, fe.Message)
-		}
+	switch {
+	case input.Email == "":
+		ve.Add("email", "required", "email is required")
+	case len(input.Email) > 255:
+		ve.Add("email", "too_long", "email must be 255 characters or less")
+	case !emailRegex.MatchString(input.Email):
+		ve.Add("email", "invalid_format", "email format is invalid")
 	}
 
 	if ve.HasErrors() {
