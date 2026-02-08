@@ -7,7 +7,9 @@ import (
 	"net/http"
 
 	"go-api/internal/application/user"
-	"go-api/internal/presentation/http/errors"
+	"go-api/internal/domain"
+	"go-api/internal/domain/user/valueobject"
+	httperrors "go-api/internal/presentation/http/errors"
 )
 
 // UserHandler はユーザー関連のHTTPハンドラー。
@@ -52,6 +54,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ve := validateCreateUserInput(input); ve != nil {
+		httperrors.WriteError(w, r, ve, h.logger)
+		return
+	}
+
 	output, err := h.createUserUC.Execute(r.Context(), input)
 	if err != nil {
 		httperrors.WriteError(w, r, err, h.logger)
@@ -61,4 +68,28 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(output)
+}
+
+// validateCreateUserInput は入力値をバリデーションする。
+// エラーがある場合は ValidationError を返し、問題なければ nil を返す。
+func validateCreateUserInput(input user.CreateUserInput) *domain.ValidationError {
+	ve := domain.NewValidationError()
+
+	if _, err := valueobject.NewUserName(input.Name); err != nil {
+		if fe := valueobject.ToFieldError("name", err); fe != nil {
+			ve.Add(fe.Field, fe.Code, fe.Message)
+		}
+	}
+
+	if _, err := valueobject.NewEmail(input.Email); err != nil {
+		if fe := valueobject.ToFieldError("email", err); fe != nil {
+			ve.Add(fe.Field, fe.Code, fe.Message)
+		}
+	}
+
+	if ve.HasErrors() {
+		return ve
+	}
+
+	return nil
 }
