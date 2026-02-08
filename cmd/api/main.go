@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
+	"go-api/internal/config"
 	"go-api/internal/di"
 	"go-api/internal/infrastructure/database"
 	httpapi "go-api/internal/presentation/http"
@@ -19,9 +20,10 @@ func main() {
 }
 
 func run() error {
+	cfg := config.Load()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	pool, err := database.Connect()
+	pool, err := database.Connect(context.Background(), cfg.Database)
 	if err != nil {
 		return err
 	}
@@ -32,13 +34,13 @@ func run() error {
 	h := httpapi.NewRouter(container)
 
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + cfg.Server.Port,
 		Handler:      h,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 
-	logger.Info("server starting", "addr", ":8080")
+	logger.Info("server starting", "addr", server.Addr)
 	return server.ListenAndServe()
 }
