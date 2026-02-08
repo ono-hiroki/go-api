@@ -21,50 +21,6 @@ var (
 	ErrForbidden = errors.New("forbidden")
 )
 
-// FieldError は単一フィールドのバリデーションエラー。
-type FieldError struct {
-	Field   string // フィールド名（例: "email", "user.name"）
-	Code    string // エラーコード（例: "required", "too_long"）
-	Message string // エラーメッセージ
-}
-
-// ValidationError は複数フィールドのバリデーションエラーを表現する。
-type ValidationError struct {
-	Errors []FieldError
-}
-
-// NewValidationError は新しいValidationErrorを生成する。
-func NewValidationError() *ValidationError {
-	return &ValidationError{Errors: make([]FieldError, 0)}
-}
-
-// Error はerrorインターフェースを実装する。
-func (e *ValidationError) Error() string {
-	if len(e.Errors) == 0 {
-		return "validation failed"
-	}
-	return e.Errors[0].Message
-}
-
-// Is は errors.Is で ErrInvalidInput として判定可能にする。
-func (e *ValidationError) Is(target error) bool {
-	return target == ErrInvalidInput
-}
-
-// Add はフィールドエラーを追加する。
-func (e *ValidationError) Add(field, code, message string) {
-	e.Errors = append(e.Errors, FieldError{
-		Field:   field,
-		Code:    code,
-		Message: message,
-	})
-}
-
-// HasErrors はエラーが存在するかを返す。
-func (e *ValidationError) HasErrors() bool {
-	return len(e.Errors) > 0
-}
-
 // DomainError はドメインエラーにコンテキストを付与するラッパー。
 type DomainError struct {
 	Kind    error  // 元のセンチネルエラー（ErrNotFound等）

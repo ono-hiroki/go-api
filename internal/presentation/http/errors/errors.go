@@ -4,8 +4,11 @@ package httperrors
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 
 	"go-api/internal/domain"
 )
@@ -68,6 +71,13 @@ func CodeFromError(err error) string {
 // WriteError はエラーレスポンスをJSONで書き込む。
 // 500系エラーの場合は詳細をログに記録し、ユーザーには隠蔽する。
 func WriteError(w http.ResponseWriter, r *http.Request, err error, logger *slog.Logger) {
+	// validator.ValidationErrors の場合は特別処理
+	var ve validator.ValidationErrors
+	if errors.As(err, &ve) {
+		writeValidationError(w, ve)
+		return
+	}
+
 	status := StatusFromError(err)
 	code := CodeFromError(err)
 
@@ -87,22 +97,58 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error, logger *slog.
 		},
 	}
 
-	// ValidationErrorの場合はdetailsを追加
-	var validationErr *domain.ValidationError
-	if errors.As(err, &validationErr) {
-		resp.Error.Details = make([]FieldError, len(validationErr.Errors))
-		for i, fe := range validationErr.Errors {
-			resp.Error.Details[i] = FieldError{
-				Field:   fe.Field,
-				Code:    fe.Code,
-				Message: fe.Message,
-			}
-		}
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func writeValidationError(w http.ResponseWriter, ve validator.ValidationErrors) {
+	details := make([]FieldError, len(ve))
+	for i, fe := range ve {
+		details[i] = FieldError{
+			Field:   fe.Field(),
+			Code:    tagToCode(fe.Tag()),
+			Message: fieldErrorMessage(fe),
+		}
+	}
+
+	resp := ErrorResponse{
+		Error: ErrorDetail{
+			Code:    "VALIDATION_ERROR",
+			Message: "validation error",
+			Details: details,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func tagToCode(tag string) string {
+	switch tag {
+	case "required":
+		return "required"
+	case "max":
+		return "too_long"
+	case "email":
+		return "invalid_format"
+	default:
+		return tag
+	}
+}
+
+func fieldErrorMessage(fe validator.FieldError) string {
+	switch fe.Tag() {
+	case "required":
+		return fmt.Sprintf("%s is required", fe.Field())
+	case "max":
+		return fmt.Sprintf("%s must be %s characters or less", fe.Field(), fe.Param())
+	case "email":
+		return fmt.Sprintf("%s must be a valid email address", fe.Field())
+	default:
+		return fmt.Sprintf("%s is invalid", fe.Field())
+	}
 }
 
 // userFacingMessage は本番環境向けのエラーメッセージを返す。

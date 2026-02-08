@@ -5,13 +5,15 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go-api/internal/domain"
-	"go-api/internal/presentation/http/errors"
+	httperrors "go-api/internal/presentation/http/errors"
+	"go-api/internal/presentation/http/validation"
 )
 
 func TestStatusFromError(t *testing.T) {
@@ -28,7 +30,6 @@ func TestStatusFromError(t *testing.T) {
 		{"unknown error", errors.New("unknown"), http.StatusInternalServerError},
 		{"DomainError NotFound", domain.NotFound("user", "FindByID"), http.StatusNotFound},
 		{"DomainError Conflict", domain.Conflict("user", "Save", nil), http.StatusConflict},
-		{"ValidationError", createValidationError(), http.StatusBadRequest},
 	}
 
 	for _, tt := range tests {
@@ -84,9 +85,13 @@ func TestWriteError(t *testing.T) {
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodPost, "/users", http.NoBody)
 
-		ve := domain.NewValidationError()
-		ve.Add("email", "required", "email is required")
-		ve.Add("name", "too_long", "name must be 100 characters or less")
+		// validator.ValidationErrors を生成するためにバリデーションを実行
+		type testReq struct {
+			Email string `json:"email" validate:"required,email"`
+			Name  string `json:"name" validate:"required,max=100"`
+		}
+		req := testReq{Email: "", Name: strings.Repeat("a", 101)}
+		ve := validation.Struct(req)
 
 		httperrors.WriteError(w, r, ve, nil)
 
@@ -119,8 +124,3 @@ func TestWriteError(t *testing.T) {
 	})
 }
 
-func createValidationError() *domain.ValidationError {
-	ve := domain.NewValidationError()
-	ve.Add("email", "required", "email is required")
-	return ve
-}
