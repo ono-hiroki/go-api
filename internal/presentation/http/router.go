@@ -14,6 +14,9 @@ import (
 type Dependencies interface {
 	ListUserHandler() *userhandler.ListHandler
 	CreateUserHandler() *userhandler.CreateHandler
+	GetUserHandler() *userhandler.GetHandler
+	UpdateUserHandler() *userhandler.UpdateHandler
+	DeleteUserHandler() *userhandler.DeleteHandler
 	Logger() *slog.Logger
 }
 
@@ -27,6 +30,9 @@ func NewRouter(deps Dependencies) http.Handler {
 	// ユーザー
 	mux.Handle("GET /users", deps.ListUserHandler())
 	mux.Handle("POST /users", deps.CreateUserHandler())
+	mux.Handle("GET /users/{id}", deps.GetUserHandler())
+	mux.Handle("PUT /users/{id}", deps.UpdateUserHandler())
+	mux.Handle("DELETE /users/{id}", deps.DeleteUserHandler())
 
 	// ミドルウェア適用
 	var h http.Handler = mux

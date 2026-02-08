@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"go-api/internal/domain"
+	"go-api/internal/domain/user/valueobject"
 )
 
 // ErrorResponse はAPIエラーレスポンスのJSON構造。
@@ -39,7 +40,13 @@ func StatusFromError(err error) int {
 		return http.StatusNotFound
 	case errors.Is(err, domain.ErrConflict):
 		return http.StatusConflict
-	case errors.Is(err, domain.ErrInvalidInput):
+	case errors.Is(err, domain.ErrInvalidInput),
+		errors.Is(err, valueobject.ErrInvalidID),
+		errors.Is(err, valueobject.ErrNameRequired),
+		errors.Is(err, valueobject.ErrNameTooLong),
+		errors.Is(err, valueobject.ErrEmailRequired),
+		errors.Is(err, valueobject.ErrEmailTooLong),
+		errors.Is(err, valueobject.ErrEmailInvalid):
 		return http.StatusBadRequest
 	case errors.Is(err, domain.ErrUnauthorized):
 		return http.StatusUnauthorized
@@ -57,7 +64,13 @@ func CodeFromError(err error) string {
 		return "NOT_FOUND"
 	case errors.Is(err, domain.ErrConflict):
 		return "CONFLICT"
-	case errors.Is(err, domain.ErrInvalidInput):
+	case errors.Is(err, domain.ErrInvalidInput),
+		errors.Is(err, valueobject.ErrInvalidID),
+		errors.Is(err, valueobject.ErrNameRequired),
+		errors.Is(err, valueobject.ErrNameTooLong),
+		errors.Is(err, valueobject.ErrEmailRequired),
+		errors.Is(err, valueobject.ErrEmailTooLong),
+		errors.Is(err, valueobject.ErrEmailInvalid):
 		return "VALIDATION_ERROR"
 	case errors.Is(err, domain.ErrUnauthorized):
 		return "UNAUTHORIZED"

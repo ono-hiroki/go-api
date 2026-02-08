@@ -139,6 +139,10 @@ func TestUserRepository_FindAll(t *testing.T) {
 	t.Run("全ユーザーを取得できる", func(t *testing.T) {
 		ctx, tx, repo := setupTest(t)
 
+		// テスト用にテーブルをクリア
+		_, err := tx.Exec(ctx, `DELETE FROM users`)
+		require.NoError(t, err, "テーブルクリアに失敗")
+
 		u1 := factory.NewUser()
 		u2 := factory.NewUser()
 		insertUserRow(t, ctx, tx, u1)

@@ -22,3 +22,27 @@ func (c *Container) CreateUserHandler() *userhandler.CreateHandler {
 	uc := usecase.NewCreateUserUsecase(repo)
 	return userhandler.NewCreateHandler(uc, c.logger)
 }
+
+// GetUserHandler はユーザー取得ハンドラーを生成する。
+func (c *Container) GetUserHandler() *userhandler.GetHandler {
+	queries := sqlcuser.New(c.pool)
+	repo := postgres.NewUserRepository(queries)
+	uc := usecase.NewGetUserUsecase(repo)
+	return userhandler.NewGetHandler(uc, c.logger)
+}
+
+// UpdateUserHandler はユーザー更新ハンドラーを生成する。
+func (c *Container) UpdateUserHandler() *userhandler.UpdateHandler {
+	queries := sqlcuser.New(c.pool)
+	repo := postgres.NewUserRepository(queries)
+	uc := usecase.NewUpdateUserUsecase(repo)
+	return userhandler.NewUpdateHandler(uc, c.logger)
+}
+
+// DeleteUserHandler はユーザー削除ハンドラーを生成する。
+func (c *Container) DeleteUserHandler() *userhandler.DeleteHandler {
+	queries := sqlcuser.New(c.pool)
+	repo := postgres.NewUserRepository(queries)
+	uc := usecase.NewDeleteUserUsecase(repo)
+	return userhandler.NewDeleteHandler(uc, c.logger)
+}

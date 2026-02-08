@@ -50,6 +50,16 @@ model InternalServerError {
   };
 }
 
+/** リソースが見つからないエラー */
+@error
+model NotFoundError {
+  @statusCode statusCode: 404;
+  @body body: {
+    code: "NOT_FOUND";
+    message: string;
+  };
+}
+
 // ========================================
 // User Models
 // ========================================
@@ -87,6 +97,27 @@ model CreateUserResponse {
   user: User;
 }
 
+/** ユーザー取得レスポンス */
+model GetUserResponse {
+  user: User;
+}
+
+/** ユーザー更新リクエスト */
+model UpdateUserRequest {
+  /** ユーザー名 (1-100文字) */
+  @maxLength(100)
+  name: string;
+
+  /** メールアドレス */
+  @maxLength(255)
+  email: string;
+}
+
+/** ユーザー更新レスポンス */
+model UpdateUserResponse {
+  user: User;
+}
+
 // ========================================
 // User API
 // ========================================
@@ -104,6 +135,23 @@ interface Users {
     @statusCode statusCode: 201;
     @body body: CreateUserResponse;
   } | ValidationError | InternalServerError;
+
+  /** ユーザーを取得する */
+  @get
+  @route("{id}")
+  get(@path id: string): GetUserResponse | NotFoundError | InternalServerError;
+
+  /** ユーザーを更新する */
+  @put
+  @route("{id}")
+  update(@path id: string, @body body: UpdateUserRequest): UpdateUserResponse | ValidationError | NotFoundError | InternalServerError;
+
+  /** ユーザーを削除する */
+  @delete
+  @route("{id}")
+  delete(@path id: string): {
+    @statusCode statusCode: 204;
+  } | NotFoundError | InternalServerError;
 }
 
 // ========================================

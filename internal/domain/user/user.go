@@ -32,3 +32,13 @@ func Reconstruct(id valueobject.UserID, name valueobject.UserName, email valueob
 func (u *User) ID() valueobject.UserID     { return u.id }
 func (u *User) Name() valueobject.UserName { return u.name }
 func (u *User) Email() valueobject.Email   { return u.email }
+
+// ChangeName はユーザー名を変更する。
+func (u *User) ChangeName(name valueobject.UserName) {
+	u.name = name
+}
+
+// ChangeEmail はメールアドレスを変更する。
+func (u *User) ChangeEmail(email valueobject.Email) {
+	u.email = email
+}

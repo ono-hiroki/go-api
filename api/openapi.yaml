@@ -117,6 +117,186 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateUserRequest'
+  /users/{id}:
+    get:
+      operationId: Users_get
+      description: ユーザーを取得する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+        '404':
+          description: リソースが見つからないエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - NOT_FOUND
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+        '500':
+          description: 内部サーバーエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - INTERNAL_ERROR
+                  message:
+                    type: string
+                    enum:
+                      - internal server error
+                required:
+                  - code
+                  - message
+      tags:
+        - Users
+    put:
+      operationId: Users_update
+      description: ユーザーを更新する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserResponse'
+        '400':
+          description: バリデーションエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationErrorDetail'
+                required:
+                  - code
+                  - message
+                  - details
+        '404':
+          description: リソースが見つからないエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - NOT_FOUND
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+        '500':
+          description: 内部サーバーエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - INTERNAL_ERROR
+                  message:
+                    type: string
+                    enum:
+                      - internal server error
+                required:
+                  - code
+                  - message
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+    delete:
+      operationId: Users_delete
+      description: ユーザーを削除する
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        '404':
+          description: リソースが見つからないエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - NOT_FOUND
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+        '500':
+          description: 内部サーバーエラーレスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - INTERNAL_ERROR
+                  message:
+                    type: string
+                    enum:
+                      - internal server error
+                required:
+                  - code
+                  - message
+      tags:
+        - Users
 components:
   schemas:
     CreateUserRequest:
@@ -142,6 +322,14 @@ components:
         user:
           $ref: '#/components/schemas/User'
       description: ユーザー作成レスポンス
+    GetUserResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+      description: ユーザー取得レスポンス
     ListUsersResponse:
       type: object
       required:
@@ -152,6 +340,29 @@ components:
           items:
             $ref: '#/components/schemas/User'
       description: ユーザー一覧レスポンス
+    UpdateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: ユーザー名 (1-100文字)
+        email:
+          type: string
+          maxLength: 255
+          description: メールアドレス
+      description: ユーザー更新リクエスト
+    UpdateUserResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+      description: ユーザー更新レスポンス
     User:
       type: object
       required:
