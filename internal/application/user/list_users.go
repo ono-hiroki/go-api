@@ -6,9 +6,16 @@ import (
 	"go-api/internal/domain/user"
 )
 
+// UserDTO はユーザー情報のDTO。
+type UserDTO struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 // ListUsersOutput はユーザー一覧取得の出力。
 type ListUsersOutput struct {
-	Users []*user.User
+	Users []UserDTO `json:"users"`
 }
 
 // ListUsersUsecase はユーザー一覧取得のユースケース。
@@ -27,5 +34,15 @@ func (uc *ListUsersUsecase) Execute(ctx context.Context) (*ListUsersOutput, erro
 	if err != nil {
 		return nil, err
 	}
-	return &ListUsersOutput{Users: users}, nil
+
+	dtos := make([]UserDTO, len(users))
+	for i, u := range users {
+		dtos[i] = UserDTO{
+			ID:    u.ID().String(),
+			Name:  u.Name().String(),
+			Email: u.Email().String(),
+		}
+	}
+
+	return &ListUsersOutput{Users: dtos}, nil
 }

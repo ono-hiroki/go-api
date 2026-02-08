@@ -27,7 +27,7 @@ func TestListUsersUsecase_Execute(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Len(t, output.Users, 1)
-		assert.Equal(t, "test", output.Users[0].Name().String())
+		assert.Equal(t, "test", output.Users[0].Name)
 	})
 
 	t.Run("ユーザーが0件の場合は空のスライスを返す", func(t *testing.T) {
