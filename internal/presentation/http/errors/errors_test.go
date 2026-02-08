@@ -123,4 +123,3 @@ func TestWriteError(t *testing.T) {
 		assert.Equal(t, "internal server error", resp.Error.Message)
 	})
 }
-
