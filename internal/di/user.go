@@ -11,6 +11,7 @@ import (
 func (c *Container) UserHandler() *handler.UserHandler {
 	queries := sqlcuser.New(c.pool)
 	repo := postgres.NewUserRepository(queries)
-	uc := usecase.NewListUsersUsecase(repo)
-	return handler.NewUserHandler(uc, c.logger)
+	listUsersUC := usecase.NewListUsersUsecase(repo)
+	createUserUC := usecase.NewCreateUserUsecase(repo)
+	return handler.NewUserHandler(listUsersUC, createUserUC, c.logger)
 }

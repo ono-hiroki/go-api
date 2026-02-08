@@ -25,6 +25,7 @@ func NewRouter(deps Dependencies) http.Handler {
 
 	// ユーザー
 	mux.HandleFunc("GET /users", deps.UserHandler().ListUsers)
+	mux.HandleFunc("POST /users", deps.UserHandler().CreateUser)
 
 	// ミドルウェア適用
 	var h http.Handler = mux

@@ -1,0 +1,78 @@
+package user
+
+import (
+	"context"
+	"errors"
+
+	"go-api/internal/domain"
+	"go-api/internal/domain/user"
+	"go-api/internal/domain/user/valueobject"
+)
+
+// CreateUserInput はユーザー作成の入力。
+type CreateUserInput struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+// CreateUserOutput はユーザー作成の出力。
+type CreateUserOutput struct {
+	User UserDTO `json:"user"`
+}
+
+// CreateUserUsecase はユーザー作成のユースケース。
+type CreateUserUsecase struct {
+	repo user.UserRepository
+}
+
+// NewCreateUserUsecase は CreateUserUsecase を生成する。
+func NewCreateUserUsecase(repo user.UserRepository) *CreateUserUsecase {
+	return &CreateUserUsecase{repo: repo}
+}
+
+// Execute はユーザーを作成する。
+func (uc *CreateUserUsecase) Execute(ctx context.Context, input CreateUserInput) (*CreateUserOutput, error) {
+	ve := domain.NewValidationError()
+
+	name, err := valueobject.NewUserName(input.Name)
+	if err != nil {
+		ve.Add("name", errorCode(err), err.Error())
+	}
+
+	email, err := valueobject.NewEmail(input.Email)
+	if err != nil {
+		ve.Add("email", errorCode(err), err.Error())
+	}
+
+	if ve.HasErrors() {
+		return nil, ve
+	}
+
+	u := user.NewUser(name, email)
+
+	if err := uc.repo.Save(ctx, u); err != nil {
+		return nil, err
+	}
+
+	return &CreateUserOutput{
+		User: UserDTO{
+			ID:    u.ID().String(),
+			Name:  u.Name().String(),
+			Email: u.Email().String(),
+		},
+	}, nil
+}
+
+// errorCode はバリューオブジェクトのエラーからエラーコードを導出する。
+func errorCode(err error) string {
+	switch {
+	case errors.Is(err, valueobject.ErrNameRequired), errors.Is(err, valueobject.ErrEmailRequired):
+		return "required"
+	case errors.Is(err, valueobject.ErrNameTooLong), errors.Is(err, valueobject.ErrEmailTooLong):
+		return "too_long"
+	case errors.Is(err, valueobject.ErrEmailInvalid):
+		return "invalid_format"
+	default:
+		return "invalid"
+	}
+}

@@ -31,7 +31,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return([]*user.User{testUser}, nil)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, logger)
+		h := handler.NewUserHandler(uc, nil, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
@@ -56,7 +56,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return([]*user.User{}, nil)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, logger)
+		h := handler.NewUserHandler(uc, nil, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
@@ -77,7 +77,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return(nil, errors.New("db error"))
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, logger)
+		h := handler.NewUserHandler(uc, nil, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
@@ -93,7 +93,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return(nil, context.Canceled)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, logger)
+		h := handler.NewUserHandler(uc, nil, logger)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()

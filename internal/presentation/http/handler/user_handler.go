@@ -12,15 +12,21 @@ import (
 
 // UserHandler はユーザー関連のHTTPハンドラー。
 type UserHandler struct {
-	listUsersUC *user.ListUsersUsecase
-	logger      *slog.Logger
+	listUsersUC  *user.ListUsersUsecase
+	createUserUC *user.CreateUserUsecase
+	logger       *slog.Logger
 }
 
 // NewUserHandler は UserHandler を生成する。
-func NewUserHandler(listUsersUC *user.ListUsersUsecase, logger *slog.Logger) *UserHandler {
+func NewUserHandler(
+	listUsersUC *user.ListUsersUsecase,
+	createUserUC *user.CreateUserUsecase,
+	logger *slog.Logger,
+) *UserHandler {
 	return &UserHandler{
-		listUsersUC: listUsersUC,
-		logger:      logger,
+		listUsersUC:  listUsersUC,
+		createUserUC: createUserUC,
+		logger:       logger,
 	}
 }
 
@@ -34,5 +40,25 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(output)
+}
+
+// CreateUser はユーザーを作成するハンドラー。
+// POST /users
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var input user.CreateUserInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		httperrors.WriteError(w, r, err, h.logger)
+		return
+	}
+
+	output, err := h.createUserUC.Execute(r.Context(), input)
+	if err != nil {
+		httperrors.WriteError(w, r, err, h.logger)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(output)
 }
