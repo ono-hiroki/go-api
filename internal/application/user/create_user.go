@@ -2,17 +2,16 @@ package user
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
-	"go-api/internal/domain"
 	"go-api/internal/domain/user"
 	"go-api/internal/domain/user/valueobject"
 )
 
 // CreateUserInput はユーザー作成の入力。
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name  string `json:"name" validate:"required,max=100"`
+	Email string `json:"email" validate:"required,max=255,email"`
 }
 
 // CreateUserOutput はユーザー作成の出力。
@@ -31,21 +30,17 @@ func NewCreateUserUsecase(repo user.UserRepository) *CreateUserUsecase {
 }
 
 // Execute はユーザーを作成する。
+// 入力バリデーションはハンドラー層で実施済みの前提。
+// VO生成エラーは防御的チェックとして扱い、発生時はシステムエラーとする。
 func (uc *CreateUserUsecase) Execute(ctx context.Context, input CreateUserInput) (*CreateUserOutput, error) {
-	ve := domain.NewValidationError()
-
 	name, err := valueobject.NewUserName(input.Name)
 	if err != nil {
-		ve.Add("name", errorCode(err), err.Error())
+		return nil, fmt.Errorf("unexpected name validation error: %w", err)
 	}
 
 	email, err := valueobject.NewEmail(input.Email)
 	if err != nil {
-		ve.Add("email", errorCode(err), err.Error())
-	}
-
-	if ve.HasErrors() {
-		return nil, ve
+		return nil, fmt.Errorf("unexpected email validation error: %w", err)
 	}
 
 	u := user.NewUser(name, email)
@@ -61,18 +56,4 @@ func (uc *CreateUserUsecase) Execute(ctx context.Context, input CreateUserInput)
 			Email: u.Email().String(),
 		},
 	}, nil
-}
-
-// errorCode はバリューオブジェクトのエラーからエラーコードを導出する。
-func errorCode(err error) string {
-	switch {
-	case errors.Is(err, valueobject.ErrNameRequired), errors.Is(err, valueobject.ErrEmailRequired):
-		return "required"
-	case errors.Is(err, valueobject.ErrNameTooLong), errors.Is(err, valueobject.ErrEmailTooLong):
-		return "too_long"
-	case errors.Is(err, valueobject.ErrEmailInvalid):
-		return "invalid_format"
-	default:
-		return "invalid"
-	}
 }

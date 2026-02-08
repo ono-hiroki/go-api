@@ -6,9 +6,14 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"go-api/internal/application/user"
-	"go-api/internal/presentation/http/errors"
+	"go-api/internal/domain"
+	httperrors "go-api/internal/presentation/http/errors"
 )
+
+var validate = validator.New()
 
 // UserHandler はユーザー関連のHTTPハンドラー。
 type UserHandler struct {
@@ -49,6 +54,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input user.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		httperrors.WriteError(w, r, err, h.logger)
+		return
+	}
+
+	if err := validate.Struct(input); err != nil {
+		httperrors.WriteError(w, r, domain.ErrInvalidInput, h.logger)
 		return
 	}
 
