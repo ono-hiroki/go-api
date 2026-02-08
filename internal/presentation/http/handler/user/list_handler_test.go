@@ -1,4 +1,4 @@
-package handler_test
+package user_test
 
 import (
 	"context"
@@ -17,11 +17,11 @@ import (
 	usecase "go-api/internal/application/user"
 	"go-api/internal/domain/user"
 	"go-api/internal/domain/user/mocks"
-	"go-api/internal/presentation/http/handler"
+	handler "go-api/internal/presentation/http/handler/user"
 	"go-api/internal/testutil/factory"
 )
 
-func TestUserHandler_ListUsers(t *testing.T) {
+func TestListHandler(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	t.Run("ユーザー一覧を取得できる", func(t *testing.T) {
@@ -31,12 +31,12 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return([]*user.User{testUser}, nil)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, nil, logger)
+		h := handler.NewListHandler(uc, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
 
-		h.ListUsers(rec, req)
+		h.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
@@ -56,12 +56,12 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return([]*user.User{}, nil)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, nil, logger)
+		h := handler.NewListHandler(uc, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
 
-		h.ListUsers(rec, req)
+		h.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
 
@@ -77,12 +77,12 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return(nil, errors.New("db error"))
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, nil, logger)
+		h := handler.NewListHandler(uc, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody)
 		rec := httptest.NewRecorder()
 
-		h.ListUsers(rec, req)
+		h.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
@@ -93,7 +93,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		repo.EXPECT().FindAll(mock.Anything).Return(nil, context.Canceled)
 
 		uc := usecase.NewListUsersUsecase(repo)
-		h := handler.NewUserHandler(uc, nil, logger)
+		h := handler.NewListHandler(uc, logger)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -101,7 +101,7 @@ func TestUserHandler_ListUsers(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/users", http.NoBody).WithContext(ctx)
 		rec := httptest.NewRecorder()
 
-		h.ListUsers(rec, req)
+		h.ServeHTTP(rec, req)
 
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})

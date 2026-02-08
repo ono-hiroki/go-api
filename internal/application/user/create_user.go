@@ -10,13 +10,13 @@ import (
 
 // CreateUserInput はユーザー作成の入力。
 type CreateUserInput struct {
-	Name  string `json:"name" validate:"required,max=100"`
-	Email string `json:"email" validate:"required,max=255,email"`
+	Name  string
+	Email string
 }
 
 // CreateUserOutput はユーザー作成の出力。
 type CreateUserOutput struct {
-	User UserDTO `json:"user"`
+	User UserDTO
 }
 
 // CreateUserUsecase はユーザー作成のユースケース。

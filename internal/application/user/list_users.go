@@ -8,14 +8,14 @@ import (
 
 // UserDTO はユーザー情報のDTO。
 type UserDTO struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    string
+	Name  string
+	Email string
 }
 
 // ListUsersOutput はユーザー一覧取得の出力。
 type ListUsersOutput struct {
-	Users []UserDTO `json:"users"`
+	Users []UserDTO
 }
 
 // ListUsersUsecase はユーザー一覧取得のユースケース。

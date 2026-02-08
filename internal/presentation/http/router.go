@@ -5,14 +5,15 @@ import (
 	"log/slog"
 	"net/http"
 
-	"go-api/internal/presentation/http/handler"
+	userhandler "go-api/internal/presentation/http/handler/user"
 	"go-api/internal/presentation/http/middleware"
 )
 
 // Dependencies はルーター構築に必要な依存関係のインターフェース。
 // di.Container がこのインターフェースを満たす。
 type Dependencies interface {
-	UserHandler() *handler.UserHandler
+	ListUserHandler() *userhandler.ListHandler
+	CreateUserHandler() *userhandler.CreateHandler
 	Logger() *slog.Logger
 }
 
@@ -24,8 +25,8 @@ func NewRouter(deps Dependencies) http.Handler {
 	mux.HandleFunc("/health", handleHealth)
 
 	// ユーザー
-	mux.HandleFunc("GET /users", deps.UserHandler().ListUsers)
-	mux.HandleFunc("POST /users", deps.UserHandler().CreateUser)
+	mux.Handle("GET /users", deps.ListUserHandler())
+	mux.Handle("POST /users", deps.CreateUserHandler())
 
 	// ミドルウェア適用
 	var h http.Handler = mux
