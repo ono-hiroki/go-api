@@ -3,7 +3,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -58,8 +57,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ve := validateCreateUserInput(input); ve != nil {
-		httperrors.WriteError(w, r, ve, h.logger)
+	if err := validate.Struct(input); err != nil {
+		httperrors.WriteError(w, r, domain.ErrInvalidInput, h.logger)
 		return
 	}
 
@@ -72,54 +71,4 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(output)
-}
-
-// validateCreateUserInput は入力値をバリデーションする。
-// エラーがある場合は ValidationError を返し、問題なければ nil を返す。
-func validateCreateUserInput(input user.CreateUserInput) *domain.ValidationError {
-	err := validate.Struct(input)
-	if err == nil {
-		return nil
-	}
-
-	var validationErrors validator.ValidationErrors
-	if !errors.As(err, &validationErrors) {
-		return nil
-	}
-
-	ve := domain.NewValidationError()
-	for _, fe := range validationErrors {
-		ve.Add(fe.Field(), tagToCode(fe.Tag()), tagToMessage(fe))
-	}
-
-	return ve
-}
-
-// tagToCode はバリデーションタグをエラーコードに変換する。
-func tagToCode(tag string) string {
-	switch tag {
-	case "required":
-		return "required"
-	case "max":
-		return "too_long"
-	case "email":
-		return "invalid_format"
-	default:
-		return "invalid"
-	}
-}
-
-// tagToMessage はバリデーションエラーからメッセージを生成する。
-func tagToMessage(fe validator.FieldError) string {
-	field := fe.Field()
-	switch fe.Tag() {
-	case "required":
-		return field + " is required"
-	case "max":
-		return field + " must be " + fe.Param() + " characters or less"
-	case "email":
-		return field + " format is invalid"
-	default:
-		return field + " is invalid"
-	}
 }
